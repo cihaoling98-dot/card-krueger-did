@@ -47,6 +47,15 @@ df["gap"] = np.where(df["NJ"] == 1,
                      np.maximum(0.0, (5.05 - df["WAGE_ST"]) / df["WAGE_ST"]), 0.0)
 
 # ---------------------------------------------------------------------------
+# analysis-ready (processed) dataset
+# ---------------------------------------------------------------------------
+PROC_COLS = ["SHEET", "CHAIN", "CO_OWNED", "STATE", "NJ", "SOUTHJ", "CENTRALJ",
+             "NORTHJ", "PA1", "PA2", "SHORE", "STATUS2", "WAGE_ST", "WAGE_ST2",
+             "EMPFT", "EMPPT", "NMGRS", "EMPFT2", "EMPPT2", "NMGRS2",
+             "fte1", "fte2", "fte2_temp0", "dfte", "dfte_temp0", "gap"]
+df[PROC_COLS].to_csv(os.path.join(ROOT, "data", "processed.csv"), index=False)
+
+# ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
 def mean_se(x):
