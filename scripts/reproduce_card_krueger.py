@@ -200,6 +200,40 @@ def build(vars_):
 
 reg_results = {lbl: sm.OLS(y, build(v)).fit() for lbl, v in specs.items()}
 
+# ---------------------------------------------------------------------------
+# within-NJ treatment-intensity DiD (NJ sample only)
+# ---------------------------------------------------------------------------
+nj_reg = df[NJ & df["dfte"].notna() & df["WAGE_ST"].notna()].copy()
+nj_y = nj_reg["dfte"]
+nj_const = pd.Series(1.0, index=nj_reg.index, name="const")
+nj_chain = pd.get_dummies(nj_reg["CHAIN"], prefix="chain").iloc[:, 1:]
+nj_region = nj_reg[["CENTRALJ", "NORTHJ"]]
+
+
+def nj_build(vars_):
+    parts = [nj_const]
+    for v in vars_:
+        if v in nj_chain.columns:
+            parts.append(nj_chain[v])
+        elif v in nj_region.columns:
+            parts.append(nj_region[v])
+        else:
+            parts.append(nj_reg[v])
+    return pd.concat(parts, axis=1)
+
+
+nj_gap_specs = [
+    ("GAP only", ["gap"]),
+    ("+ chain & ownership", ["gap", "CO_OWNED", "chain_2", "chain_3", "chain_4"]),
+    ("+ region", ["gap", "CO_OWNED", "chain_2", "chain_3", "chain_4", "CENTRALJ", "NORTHJ"]),
+]
+nj_gap_fits = {lbl: sm.OLS(nj_y, nj_build(v)).fit() for lbl, v in nj_gap_specs}
+
+nj_low = (nj_reg["WAGE_ST"] == 4.25).astype(int)
+nj_mid = ((nj_reg["WAGE_ST"] > 4.25) & (nj_reg["WAGE_ST"] < 5.0)).astype(int)
+nj_disc = sm.OLS(nj_y, pd.concat([nj_const, nj_low.rename("low"), nj_mid.rename("mid")],
+                                 axis=1)).fit()
+
 # ===========================================================================
 # print + write report
 # ===========================================================================
@@ -254,6 +288,28 @@ for lbl, v in specs.items():
     controls = [c for c in v if c not in ("NJ", "gap")]
     P(f"| {lbl} | {coef('NJ')} | {coef('gap')} | "
       f"{', '.join(controls) if controls else '—'} | {np.sqrt(fit.mse_resid):.2f} |")
+P("")
+
+P("## Within-NJ treatment-intensity DiD (extension)")
+P("")
+P("Sample restricted to New Jersey (all PA dropped); no 0/1 control group — treatment "
+  "intensity is the continuous `GAP = max(0, (5.05 - WAGE_ST)/WAGE_ST)`, so stores already "
+  "paying ≥ $5.05 have GAP = 0 and act as the within-state reference.")
+P("")
+P(f"Regression sample: N = {len(nj_reg)} NJ stores; mean ΔFTE = {nj_y.mean():+.3f}.")
+P("")
+P("| Specification | GAP coefficient | s.e. | t | p |")
+P("|---|---|---|---|---|")
+for lbl, v in nj_gap_specs:
+    fit = nj_gap_fits[lbl]
+    P(f"| {lbl} | {fit.params['gap']:+.2f} | {fit.bse['gap']:.2f} | "
+      f"{fit.tvalues['gap']:.2f} | {fit.pvalues['gap']:.3f} |")
+P("")
+P(f"Discrete Low−High contrast (wage = $4.25 vs ≥ $5.00): "
+  f"**{nj_disc.params['low']:+.2f} FTE** (s.e. {nj_disc.bse['low']:.2f}, "
+  f"p = {nj_disc.pvalues['low']:.3f}); Mid−High = {nj_disc.params['mid']:+.2f} "
+  f"(s.e. {nj_disc.bse['mid']:.2f}, p = {nj_disc.pvalues['mid']:.3f}). "
+  "Both versions indicate no negative employment effect.")
 P("")
 
 P("## Notes")

@@ -47,6 +47,20 @@ Sample: 365 stores; mean ΔFTE = -0.252, SD = 8.749.
 | (iv) | — | +15.19 (6.08) | CO_OWNED, chain_2, chain_3, chain_4 | 8.67 |
 | (v) | — | +12.03 (7.32) | CO_OWNED, chain_2, chain_3, chain_4, CENTRALJ, NORTHJ, PA1, PA2 | 8.67 |
 
+## Within-NJ treatment-intensity DiD (extension)
+
+Sample restricted to New Jersey (all PA dropped); no 0/1 control group — treatment intensity is the continuous `GAP = max(0, (5.05 - WAGE_ST)/WAGE_ST)`, so stores already paying ≥ $5.05 have GAP = 0 and act as the within-state reference.
+
+Regression sample: N = 293 NJ stores; mean ΔFTE = +0.213.
+
+| Specification | GAP coefficient | s.e. | t | p |
+|---|---|---|---|---|
+| GAP only | +13.08 | 6.60 | 1.98 | 0.048 |
+| + chain & ownership | +12.27 | 6.82 | 1.80 | 0.073 |
+| + region | +12.14 | 6.87 | 1.77 | 0.078 |
+
+Discrete Low−High contrast (wage = $4.25 vs ≥ $5.00): **+3.36 FTE** (s.e. 1.28, p = 0.009); Mid−High = +2.87 (s.e. 1.20, p = 0.017). Both versions indicate no negative employment effect.
+
 ## Notes
 
 - **FTE** = full-time employees + managers + 0.5 × part-time employees. Permanently-closed stores (STATUS2 = 3, six stores) are assigned zero wave-2 employment; temporarily-closed stores (STATUS2 ∈ {2,4,5}, four stores) are treated as missing, except in row 5 of Table 3 where they are set to zero.

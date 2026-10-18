@@ -1,7 +1,7 @@
 VENV := .venv
 PY := $(VENV)/bin/python
 
-.PHONY: setup reproduce pdf all clean
+.PHONY: setup reproduce within pdf all clean
 
 setup:
 	python3 -m venv $(VENV)
@@ -11,10 +11,13 @@ setup:
 reproduce:
 	$(PY) scripts/reproduce_card_krueger.py
 
+within:
+	$(PY) scripts/within_nj_did.py
+
 pdf:
 	$(PY) scripts/export_pdf.py
 
-all: reproduce pdf
+all: reproduce within pdf
 
 clean:
-	rm -rf $(VENV) data/processed.csv output/figure1_change_in_employment.png reproduction_report.md
+	rm -rf $(VENV) data/processed.csv output/figure1_change_in_employment.png output/within_nj_did.md reproduction_report.md
