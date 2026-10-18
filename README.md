@@ -50,6 +50,9 @@ python3 -m venv .venv
 
 # 3. (optional) build the typeset PDF report
 .venv/bin/python scripts/export_pdf.py              # or: make pdf
+
+# 4. (optional) within-NJ treatment-intensity DiD (NJ sample only)
+.venv/bin/python scripts/within_nj_did.py
 ```
 
 One-command build: `make all`.
@@ -62,6 +65,7 @@ One-command build: `make all`.
 | `output/figure1_change_in_employment.png` | Figure 1 — distribution of the change in FTE employment, NJ vs PA. |
 | `reproduction_report.md` | Tables 2, 3, 4 and Figure 1 with notes. |
 | `Card_Krueger_1994_reproduction.pdf` | Typeset report (via `scripts/export_pdf.py`). |
+| `output/within_nj_did.md` | Within-NJ treatment-intensity DiD results (via `scripts/within_nj_did.py`). |
 
 ## Results at a glance
 
@@ -78,6 +82,29 @@ increase and fell at high-wage stores — a within-state check consistent with t
 **Table 4** reduced-form regressions give an NJ coefficient of ≈ +2.3 (s.e. 1.2) and
 a wage-gap coefficient of ≈ +15.7 (s.e. 6.1), in line with the published paper.
 
+## Within-NJ treatment-intensity DiD (extension)
+
+As a further check that does **not** rely on Pennsylvania as the control group, we
+restrict the sample to New Jersey (all PA observations dropped) and exploit that
+stores were exposed to the minimum-wage increase with **different intensities**. The
+continuous exposure is `GAP_i = max(0, (5.05 - WAGE_ST_i) / WAGE_ST_i)`, so a store
+already paying ≥ $5.05 has GAP = 0 and serves as the within-state reference.
+Run: `.venv/bin/python scripts/within_nj_did.py`.
+
+**Results (N = 293 NJ stores, dependent variable: change in FTE employment):**
+
+| Specification | GAP coefficient | s.e. | t | p |
+|---|---|---|---|---|
+| GAP only | +13.08 | 6.60 | 1.98 | 0.048 |
+| + chain & ownership | +12.27 | 6.82 | 1.80 | 0.073 |
+| + region | +12.14 | 6.87 | 1.77 | 0.078 |
+
+The discrete Low−High contrast (wage = $4.25 vs ≥ $5.00) is **+3.36 FTE**
+(s.e. 1.28, p = 0.009): the stores most exposed to the policy gained employment
+relative to the least-exposed stores. Both the continuous and discrete versions
+point the same way — **no evidence of a negative employment effect**, consistent
+with the between-state DID.
+
 ## Repository structure
 
 ```
@@ -92,9 +119,11 @@ a wage-gap coefficient of ≈ +15.7 (s.e. 6.1), in line with the published paper
 │   └── processed.csv             # analysis-ready data (generated)
 ├── scripts/
 │   ├── reproduce_card_krueger.py # computes Tables 2–4 + Figure 1
+│   ├── within_nj_did.py          # within-NJ treatment-intensity DiD
 │   └── export_pdf.py             # builds the PDF report
 ├── output/
-│   └── figure1_change_in_employment.png
+│   ├── figure1_change_in_employment.png
+│   └── within_nj_did.md          # within-NJ DiD results
 └── reproduction_report.md        # full report
 ```
 
